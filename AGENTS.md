@@ -47,3 +47,19 @@ Schedule data is generated from the official Metrolinx GO Transit GTFS feed into
 ```
 
 The app intentionally avoids rendering the GO Transit website. It reads the compact bundled JSON and shows only direct Union Station GO <-> Maple GO trips.
+
+## Secrets
+
+Never commit a real GO Transit API key. The checked-in file is `Config/Secrets.xcconfig.example`; the local file `Config/Secrets.xcconfig` is ignored by Git.
+
+Create the local file with:
+
+```sh
+cp Config/Secrets.xcconfig.example Config/Secrets.xcconfig
+```
+
+Then set:
+
+```xcconfig
+GO_TRANSIT_API_KEY = actual-key-here
+```

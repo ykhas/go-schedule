@@ -6,3 +6,4 @@ build/
 *.xcresult
 xcuserdata/
 simulator-screen.png
+Config/Secrets.xcconfig

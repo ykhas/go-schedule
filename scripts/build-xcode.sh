@@ -6,6 +6,10 @@ ARGS=()
 
 export DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
 
+if [[ ! -f "$ROOT_DIR/Config/Secrets.xcconfig" ]]; then
+    cp "$ROOT_DIR/Config/Secrets.xcconfig.example" "$ROOT_DIR/Config/Secrets.xcconfig"
+fi
+
 DESTINATION="${DESTINATION:-}"
 if [[ -z "$DESTINATION" ]]; then
     DESTINATION="$(

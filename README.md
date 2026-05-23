@@ -22,6 +22,22 @@ It also selects the first available iOS simulator reported by `simctl`. Override
 DESTINATION='platform=iOS Simulator,OS=18.6,name=iPhone 16' ./scripts/build-xcode.sh
 ```
 
+## Local API Key
+
+Do not commit your GO Transit API key. Create a local config file:
+
+```sh
+cp Config/Secrets.xcconfig.example Config/Secrets.xcconfig
+```
+
+Then edit `Config/Secrets.xcconfig`:
+
+```xcconfig
+GO_TRANSIT_API_KEY = your-real-key
+```
+
+The app reads it from `Info.plist` via `AppConfiguration.goTransitAPIKey`.
+
 ## Open In Xcode
 
 ```sh

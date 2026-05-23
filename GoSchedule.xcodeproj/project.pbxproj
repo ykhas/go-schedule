@@ -11,6 +11,7 @@
 		0A0000032C00000000000001 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A0000042C00000000000001 /* ContentView.swift */; };
 		0A0000052C00000000000001 /* ScheduleStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A0000062C00000000000001 /* ScheduleStore.swift */; };
 		0A0000182C00000000000001 /* Schedules.json in Resources */ = {isa = PBXBuildFile; fileRef = 0A0000192C00000000000001 /* Schedules.json */; };
+		0A00001A2C00000000000001 /* AppConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A00001B2C00000000000001 /* AppConfiguration.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -19,6 +20,9 @@
 		0A0000062C00000000000001 /* ScheduleStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleStore.swift; sourceTree = "<group>"; };
 		0A0000092C00000000000001 /* GoSchedule.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GoSchedule.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0A0000192C00000000000001 /* Schedules.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = Schedules.json; sourceTree = "<group>"; };
+		0A00001B2C00000000000001 /* AppConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfiguration.swift; sourceTree = "<group>"; };
+		0A00001C2C00000000000001 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
+		0A00001D2C00000000000001 /* Secrets.xcconfig.example */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig.example; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -36,6 +40,7 @@
 			isa = PBXGroup;
 			children = (
 				0A00000C2C00000000000001 /* GoSchedule */,
+				0A00001E2C00000000000001 /* Config */,
 				0A00000D2C00000000000001 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -46,6 +51,7 @@
 				0A0000022C00000000000001 /* GoScheduleApp.swift */,
 				0A0000042C00000000000001 /* ContentView.swift */,
 				0A0000062C00000000000001 /* ScheduleStore.swift */,
+				0A00001B2C00000000000001 /* AppConfiguration.swift */,
 				0A0000192C00000000000001 /* Schedules.json */,
 			);
 			path = GoSchedule;
@@ -57,6 +63,15 @@
 				0A0000092C00000000000001 /* GoSchedule.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		0A00001E2C00000000000001 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				0A00001C2C00000000000001 /* Secrets.xcconfig */,
+				0A00001D2C00000000000001 /* Secrets.xcconfig.example */,
+			);
+			path = Config;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -131,6 +146,7 @@
 				0A0000012C00000000000001 /* GoScheduleApp.swift in Sources */,
 				0A0000032C00000000000001 /* ContentView.swift in Sources */,
 				0A0000052C00000000000001 /* ScheduleStore.swift in Sources */,
+				0A00001A2C00000000000001 /* AppConfiguration.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -256,6 +272,7 @@
 		};
 		0A0000162C00000000000001 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0A00001C2C00000000000001 /* Secrets.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -263,6 +280,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "GO Schedule";
+				INFOPLIST_KEY_GO_TRANSIT_API_KEY = "$(GO_TRANSIT_API_KEY)";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.navigation";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIRequiresFullScreen = NO;
@@ -285,6 +303,7 @@
 		};
 		0A0000172C00000000000001 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0A00001C2C00000000000001 /* Secrets.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -292,6 +311,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "GO Schedule";
+				INFOPLIST_KEY_GO_TRANSIT_API_KEY = "$(GO_TRANSIT_API_KEY)";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.navigation";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIRequiresFullScreen = NO;
