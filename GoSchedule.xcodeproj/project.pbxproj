@@ -10,7 +10,6 @@
 		0A0000012C00000000000001 /* GoScheduleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A0000022C00000000000001 /* GoScheduleApp.swift */; };
 		0A0000032C00000000000001 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A0000042C00000000000001 /* ContentView.swift */; };
 		0A0000052C00000000000001 /* ScheduleStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A0000062C00000000000001 /* ScheduleStore.swift */; };
-		0A0000182C00000000000001 /* Schedules.json in Resources */ = {isa = PBXBuildFile; fileRef = 0A0000192C00000000000001 /* Schedules.json */; };
 		0A00001A2C00000000000001 /* AppConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A00001B2C00000000000001 /* AppConfiguration.swift */; };
 /* End PBXBuildFile section */
 
@@ -19,7 +18,6 @@
 		0A0000042C00000000000001 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		0A0000062C00000000000001 /* ScheduleStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleStore.swift; sourceTree = "<group>"; };
 		0A0000092C00000000000001 /* GoSchedule.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GoSchedule.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		0A0000192C00000000000001 /* Schedules.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = Schedules.json; sourceTree = "<group>"; };
 		0A00001B2C00000000000001 /* AppConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfiguration.swift; sourceTree = "<group>"; };
 		0A00001C2C00000000000001 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 		0A00001D2C00000000000001 /* Secrets.xcconfig.example */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig.example; sourceTree = "<group>"; };
@@ -53,7 +51,6 @@
 				0A0000042C00000000000001 /* ContentView.swift */,
 				0A0000062C00000000000001 /* ScheduleStore.swift */,
 				0A00001B2C00000000000001 /* AppConfiguration.swift */,
-				0A0000192C00000000000001 /* Schedules.json */,
 				0A00001F2C00000000000001 /* Info.plist */,
 			);
 			path = GoSchedule;
@@ -134,7 +131,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0A0000182C00000000000001 /* Schedules.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

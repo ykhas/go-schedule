@@ -40,13 +40,13 @@ DESTINATION='platform=iOS Simulator,OS=18.6,name=iPhone 16' ./scripts/build-xcod
 
 ## Schedule Data
 
-Schedule data is generated from the official Metrolinx GO Transit GTFS feed into `GoSchedule/Schedules.json`:
+The app intentionally avoids rendering the GO Transit website. It calls the GO API Journey endpoint when a route screen opens:
 
-```sh
-./scripts/update-schedules.py
+```text
+https://api.openmetrolinx.com/OpenDataAPI/api/V1/Schedule/Journey/{Date}/{FromStopCode}/{ToStopCode}/{StartTime}/{MaxJourney}?key={GO_TRANSIT_API_KEY}
 ```
 
-The app intentionally avoids rendering the GO Transit website. It reads the compact bundled JSON and shows only direct Union Station GO <-> Maple GO trips.
+Current stop codes are `UN` for Union Station GO and `MP` for Maple GO. `Date` is `yyyyMMdd`; `StartTime` is `HHmm` from now minus 30 minutes.
 
 ## Secrets
 

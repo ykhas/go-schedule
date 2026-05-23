@@ -65,7 +65,7 @@ private struct ScheduleListView: View {
     let direction: ScheduleDirection
 
     var body: some View {
-        let trips = scheduleStore.upcomingTrips(for: direction)
+        let trips = scheduleStore.trips(for: direction)
 
         List {
             Section {
@@ -81,11 +81,17 @@ private struct ScheduleListView: View {
                 .listRowInsets(EdgeInsets(top: 14, leading: 16, bottom: 14, trailing: 16))
             }
 
-            if let errorMessage = scheduleStore.errorMessage {
+            if scheduleStore.isLoading(direction) {
+                HStack(spacing: 10) {
+                    ProgressView()
+                    Text("Loading schedule...")
+                        .foregroundStyle(.secondary)
+                }
+            } else if let errorMessage = scheduleStore.errorMessage(for: direction) {
                 Text(errorMessage)
                     .foregroundStyle(.secondary)
             } else if trips.isEmpty {
-                Text("No direct trips found for today in the bundled schedule.")
+                Text("No trips found for today.")
                     .foregroundStyle(.secondary)
             } else {
                 Section("Next trips") {
@@ -98,6 +104,12 @@ private struct ScheduleListView: View {
         .listStyle(.insetGrouped)
         .navigationTitle(direction.title)
         .navigationBarTitleDisplayMode(.inline)
+        .task {
+            await scheduleStore.loadTrips(for: direction)
+        }
+        .refreshable {
+            await scheduleStore.loadTrips(for: direction)
+        }
     }
 }
 
@@ -126,6 +138,9 @@ private struct TripRow: View {
                 Text(trip.mode)
                 Text(trip.route)
                 Text("\(trip.durationMinutes) min")
+                if trip.transferCount > 0 {
+                    Text("\(trip.transferCount) transfer\(trip.transferCount == 1 ? "" : "s")")
+                }
             }
             .font(.system(size: 14, weight: .semibold))
             .foregroundStyle(.secondary)

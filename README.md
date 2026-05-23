@@ -1,11 +1,11 @@
 # GO Schedule
 
-A minimal iOS SwiftUI app with two buttons and simple bundled GO Transit schedules:
+A minimal iOS SwiftUI app with two buttons and simple GO Transit schedules from the GO API:
 
 - `Union to Maple`
 - `Maple to Union`
 
-The app shows direct trips for today starting from 30 minutes before the current time.
+The app loads trips for today from the GO API when a route button is opened, starting from 30 minutes before the current time.
 
 ## Build
 
@@ -36,7 +36,7 @@ Then edit `Config/Secrets.xcconfig`:
 GO_TRANSIT_API_KEY = your-real-key
 ```
 
-The app reads it from `Info.plist` via `AppConfiguration.goTransitAPIKey`.
+The app reads it from `Info.plist` via `AppConfiguration.goTransitAPIKey` and sends it as the `key` query parameter.
 
 ## Open In Xcode
 
