@@ -125,17 +125,12 @@ final class ScheduleStore: ObservableObject {
     }
 
     private func fetchJourney(direction: ScheduleDirection, apiKey: String, now: Date) async throws -> JourneyResponse {
-        let requestStart = now.addingTimeInterval(-30 * 60)
-        let date = dateFormatter.string(from: requestStart)
-        let time = timeFormatter.string(from: requestStart)
-
-        var components = URLComponents()
-        components.scheme = "https"
-        components.host = "api.openmetrolinx.com"
-        components.path = "/OpenDataAPI/api/V1/Schedule/Journey/\(date)/\(direction.fromStopCode)/\(direction.toStopCode)/\(time)/\(maxJourneyCount)"
-        components.queryItems = [URLQueryItem(name: "key", value: apiKey)]
-
-        guard let url = components.url else {
+        guard let url = JourneyRequest(
+            direction: direction,
+            selectedDate: now,
+            maxJourneyCount: maxJourneyCount,
+            apiKey: apiKey
+        ).url else {
             throw URLError(.badURL)
         }
 
@@ -148,18 +143,52 @@ final class ScheduleStore: ObservableObject {
     }
 }
 
-private let dateFormatter: DateFormatter = {
+struct JourneyRequest: Equatable {
+    let direction: ScheduleDirection
+    let selectedDate: Date
+    let maxJourneyCount: Int
+    let apiKey: String
+
+    var requestStart: Date {
+        selectedDate.addingTimeInterval(-30 * 60)
+    }
+
+    var apiDate: String {
+        journeyDateFormatter.string(from: requestStart)
+    }
+
+    var apiStartTime: String {
+        journeyTimeFormatter.string(from: requestStart)
+    }
+
+    var path: String {
+        "/OpenDataAPI/api/V1/Schedule/Journey/\(apiDate)/\(direction.fromStopCode)/\(direction.toStopCode)/\(apiStartTime)/\(maxJourneyCount)"
+    }
+
+    var url: URL? {
+        var components = URLComponents()
+        components.scheme = "https"
+        components.host = "api.openmetrolinx.com"
+        components.path = path
+        components.queryItems = [URLQueryItem(name: "key", value: apiKey)]
+        return components.url
+    }
+}
+
+private let journeyDateFormatter: DateFormatter = {
     let formatter = DateFormatter()
     formatter.calendar = Calendar(identifier: .gregorian)
     formatter.locale = Locale(identifier: "en_CA")
+    formatter.timeZone = .current
     formatter.dateFormat = "yyyyMMdd"
     return formatter
 }()
 
-private let timeFormatter: DateFormatter = {
+private let journeyTimeFormatter: DateFormatter = {
     let formatter = DateFormatter()
     formatter.calendar = Calendar(identifier: .gregorian)
     formatter.locale = Locale(identifier: "en_CA")
+    formatter.timeZone = .current
     formatter.dateFormat = "HHmm"
     return formatter
 }()

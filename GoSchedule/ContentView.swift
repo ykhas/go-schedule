@@ -2,13 +2,14 @@ import SwiftUI
 
 struct ContentView: View {
     @StateObject private var scheduleStore = ScheduleStore()
+    @State private var selectedDate = Date()
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 16) {
                 ForEach(ScheduleDirection.allCases) { direction in
                     NavigationLink {
-                        ScheduleListView(direction: direction)
+                        ScheduleListView(direction: direction, selectedDate: selectedDate)
                             .environmentObject(scheduleStore)
                     } label: {
                         RouteButton(direction: direction)
@@ -17,6 +18,14 @@ struct ContentView: View {
                 }
 
                 Spacer(minLength: 0)
+
+                DatePicker("Schedule time", selection: $selectedDate, displayedComponents: [.date, .hourAndMinute])
+                    .datePickerStyle(.compact)
+                    .font(.system(size: 15, weight: .semibold))
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
+                    .background(Color(.systemGray6))
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
             }
             .padding(20)
             .navigationTitle("GO Schedule")
@@ -63,9 +72,11 @@ private struct ScheduleListView: View {
     @EnvironmentObject private var scheduleStore: ScheduleStore
 
     let direction: ScheduleDirection
+    let selectedDate: Date
 
     var body: some View {
         let trips = scheduleStore.trips(for: direction)
+        let displayDate = selectedDate.addingTimeInterval(-30 * 60).formatted(date: .abbreviated, time: .shortened)
 
         List {
             Section {
@@ -74,7 +85,7 @@ private struct ScheduleListView: View {
                         .font(.system(size: 15, weight: .semibold))
                     Text(direction.destination)
                         .font(.system(size: 24, weight: .bold))
-                    Text("Today, starting from 30 minutes ago")
+                    Text("Starting from \(displayDate)")
                         .font(.system(size: 13, weight: .medium))
                         .foregroundStyle(.secondary)
                 }
@@ -104,11 +115,11 @@ private struct ScheduleListView: View {
         .listStyle(.insetGrouped)
         .navigationTitle(direction.title)
         .navigationBarTitleDisplayMode(.inline)
-        .task {
-            await scheduleStore.loadTrips(for: direction)
+        .task(id: selectedDate) {
+            await scheduleStore.loadTrips(for: direction, relativeTo: selectedDate)
         }
         .refreshable {
-            await scheduleStore.loadTrips(for: direction)
+            await scheduleStore.loadTrips(for: direction, relativeTo: selectedDate)
         }
     }
 }
