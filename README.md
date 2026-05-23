@@ -1,9 +1,11 @@
 # GO Schedule
 
-A minimal iOS SwiftUI app with two buttons and embedded web access to GO Transit:
+A minimal iOS SwiftUI app with two buttons and simple bundled GO Transit schedules:
 
-- `Trip Planner` loads `https://www.gotransit.com/en/plan-your-trip`
-- `Schedules` loads `https://www.gotransit.com/en/see-schedules`
+- `Union to Maple`
+- `Maple to Union`
+
+The app shows direct trips for today starting from 30 minutes before the current time.
 
 ## Build
 
