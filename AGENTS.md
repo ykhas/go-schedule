@@ -63,6 +63,55 @@ xcodebuild test \
 
 Current tests live in `GoScheduleTests/JourneyRequestTests.swift` and verify the API date/time request construction, including the 30-minute offset.
 
+## IPA For AltStore
+
+The most recent IPA was produced at `dist/GoSchedule.ipa`. `dist/` is ignored and must stay untracked.
+
+To rebuild an unsigned device IPA for AltStore:
+
+```sh
+ARGS=()
+if [[ -n "${SV_SESSION_ID:-}" ]]; then
+    export SWIFTPM_DISABLE_SANDBOX=1
+    export SWIFT_BUILD_USE_SANDBOX=0
+    ARGS+=("-IDEPackageSupportDisableManifestSandbox=1")
+    ARGS+=("-IDEPackageSupportDisablePackageSandbox=1")
+    ARGS+=('OTHER_SWIFT_FLAGS=$(inherited) -disable-sandbox')
+fi
+
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
+xcodebuild \
+    -project GoSchedule.xcodeproj \
+    -scheme GoSchedule \
+    -configuration Release \
+    -destination 'generic/platform=iOS' \
+    CODE_SIGNING_ALLOWED=NO \
+    build \
+    "${ARGS[@]}"
+
+rm -rf dist/ipa-work
+mkdir -p dist/ipa-work/Payload
+cp -R .DerivedData/GoSchedule/Build/Products/Release-iphoneos/GoSchedule.app dist/ipa-work/Payload/
+(
+    cd dist/ipa-work
+    /usr/bin/zip -qry ../GoSchedule.ipa Payload
+)
+```
+
+Validation checks used:
+
+```sh
+file dist/ipa-work/Payload/GoSchedule.app/GoSchedule
+lipo -info dist/ipa-work/Payload/GoSchedule.app/GoSchedule
+unzip -l dist/GoSchedule.ipa | sed -n '1,40p'
+```
+
+Expected binary is `Mach-O 64-bit executable arm64`. Expected archive layout starts with `Payload/GoSchedule.app/`.
+
+The IPA contains the GO API key in its built `Info.plist` because the app needs it at runtime. Do not share the IPA publicly. Never commit `dist/`, `.DerivedData/`, or `Config/Secrets.xcconfig`.
+
+Note: while producing the IPA, Xcode modified local signing-related project files (`DEVELOPMENT_TEAM` and the shared scheme). Those local changes were intentionally left uncommitted. Review `git status` before committing anything.
+
 ## App Behavior
 
 The app is intentionally small:
