@@ -43,5 +43,5 @@ xcodebuild \
     -destination "$DESTINATION" \
     CODE_SIGNING_ALLOWED=NO \
     build \
-    "${ARGS[@]}" \
+    ${ARGS[@]+"${ARGS[@]}"} \
     "$@"
