@@ -38,6 +38,12 @@ GO_TRANSIT_API_KEY = your-real-key
 
 The app reads it from `Info.plist` via `AppConfiguration.goTransitAPIKey` and sends it as the `key` query parameter.
 
+## Telegram Bot Alternative
+
+The repo also includes a stateless Telegram bot in `telegram-worker/`. It exposes the same two routes, calls the same GO Journey API, and keeps the 30-minute request offset. This avoids iOS device signing entirely.
+
+See `telegram-worker/README.md` for setup and deployment. The intended deployment target is Cloudflare Workers Free with Telegram webhooks and an optional `ALLOWED_CHAT_IDS` secret so only private chats can use it.
+
 ## Open In Xcode
 
 ```sh

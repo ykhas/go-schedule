@@ -8,3 +8,4 @@ dist/
 xcuserdata/
 simulator-screen.png
 Config/Secrets.xcconfig
+.tools/
