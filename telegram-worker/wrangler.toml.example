@@ -1,0 +1,13 @@
+name = "your-worker-name"
+main = "src/index.js"
+compatibility_date = "2026-05-23"
+
+[vars]
+DAILY_REQUEST_LIMIT = "500"
+
+[[kv_namespaces]]
+binding = "RATE_LIMIT_KV"
+id = "replace-with-kv-namespace-id"
+
+[observability]
+enabled = true

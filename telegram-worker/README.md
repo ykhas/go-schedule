@@ -1,23 +1,26 @@
 # GO Schedule Telegram Bot
 
-Stateless Telegram bot for the Union <-> Maple GO schedule. It runs as a Cloudflare Worker webhook and calls the same GO Journey API as the iOS app.
+Stateless Telegram bot for the Union <-> Maple GO schedule. It runs as a Cloudflare Worker webhook and calls the GO Journey API.
 
 ## Why This Shape
 
-- Telegram gives you the phone UI without installing or signing an iOS app.
+- Telegram gives you the phone UI without installing a separate client.
 - Cloudflare Workers Free has a hard daily request limit, so accidental traffic fails instead of becoming an open-ended bill.
-- The Worker is stateless: no database, no cache, no user records.
-- `ALLOWED_CHAT_IDS` can restrict use to only your Telegram chats.
+- The Worker stores only a daily request counter in Cloudflare KV.
+- A global daily request limit caps abuse without collecting chat IDs.
 
 ## Commands
 
 - `/start` or `/help` shows the two route buttons.
 - `/u` shows Union to Maple from now.
 - `/m` shows Maple to Union from now.
+- Use the `Pick date/time` buttons to reply with a Toronto date/time.
+- Date/time replies can be `now`, `today 5pm`, `tomorrow 7:30am`, `May 25 8:15am`, or `2026-05-25 10:00`.
 - `/u 2026-05-23 10:00` shows Union to Maple for a specific Toronto date/time.
 - `/m 2026-05-23 10:00` shows Maple to Union for a specific Toronto date/time.
+- `/u today 5pm` and `/m tomorrow 7:30am` also work.
 
-The GO API request still uses the selected time minus 30 minutes, matching the Swift app.
+The GO API request uses the selected time minus 30 minutes.
 
 ## Setup
 
@@ -45,7 +48,15 @@ The GO API request still uses the selected time minus 30 minutes, matching the S
 
    Use any long random value for `TELEGRAM_WEBHOOK_SECRET`.
 
-5. Optional but recommended: restrict who can use the bot. Message your bot once, then temporarily deploy without this value and send `/start`; the bot will show your chat ID if blocked. Then set:
+5. Create the KV namespace used for the daily request limit:
+
+   ```sh
+   npx wrangler kv namespace create RATE_LIMIT_KV
+   ```
+
+   Add the returned namespace ID to `wrangler.toml` under `[[kv_namespaces]]`.
+
+6. Optional: restrict who can use the bot if you later decide to collect chat IDs:
 
    ```sh
    npx wrangler secret put ALLOWED_CHAT_IDS
@@ -53,18 +64,21 @@ The GO API request still uses the selected time minus 30 minutes, matching the S
 
    Use a comma-separated list, for example `123456789,987654321`.
 
-6. Deploy:
+7. Deploy:
 
    ```sh
    npm run deploy
    ```
 
-7. Set the Telegram webhook, replacing the URL with the deployed Worker URL:
+8. Set the Telegram webhook, replacing the URL with the deployed Worker URL. Avoid putting real secrets directly in your shell history:
 
    ```sh
-   TELEGRAM_BOT_TOKEN='bot-token' \
-   TELEGRAM_WEBHOOK_SECRET='same-random-secret' \
-   WORKER_URL='https://go-schedule-bot.your-subdomain.workers.dev' \
+   read -rsp "Telegram bot token: " TELEGRAM_BOT_TOKEN
+   echo
+   read -rsp "Telegram webhook secret: " TELEGRAM_WEBHOOK_SECRET
+   echo
+   read -rp "Worker URL: " WORKER_URL
+   export TELEGRAM_BOT_TOKEN TELEGRAM_WEBHOOK_SECRET WORKER_URL
    npm run set-webhook
    ```
 

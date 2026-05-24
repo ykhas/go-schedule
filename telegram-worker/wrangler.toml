@@ -1,6 +1,0 @@
-name = "go-schedule-bot"
-main = "src/index.js"
-compatibility_date = "2026-05-23"
-
-[observability]
-enabled = true

@@ -1,170 +1,192 @@
 # Agent Notes
 
-## Xcode In Sandvault
+## Current Architecture
 
-Full Xcode is installed at:
+This repo currently hosts a stateless Telegram bot for GO Transit schedules.
 
-```sh
-/Applications/Xcode.app
-```
+- Runtime: Cloudflare Worker in `telegram-worker/`.
+- Public URL: `$WORKER_URL`.
+- Telegram integration: webhook registered with `setWebhook` and protected by Telegram's `X-Telegram-Bot-Api-Secret-Token` header.
+- Schedule source: GO Transit Journey API.
+- Supported routes: Union Station GO to Maple GO and Maple GO to Union Station GO.
+- Time behavior: user-selected time is shifted back 30 minutes before calling the GO API.
+- Persistence: Cloudflare KV is used only for a daily request counter. No message text, user profile, or schedule results are stored.
 
-The system `xcode-select` may still point at Command Line Tools, so scripts should set:
+The main Worker implementation is `telegram-worker/src/index.js`.
 
-```sh
-export DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
-```
+## Commands
 
-When running inside Sandvault, disable nested Swift/Xcode sandboxing:
-
-```sh
-if [[ -n "${SV_SESSION_ID:-}" ]]; then
-    export SWIFTPM_DISABLE_SANDBOX=1
-    export SWIFT_BUILD_USE_SANDBOX=0
-    ARGS+=("-IDEPackageSupportDisableManifestSandbox=1")
-    ARGS+=("-IDEPackageSupportDisablePackageSandbox=1")
-    ARGS+=('OTHER_SWIFT_FLAGS=$(inherited) -disable-sandbox')
-fi
-```
-
-The checked-in build entry point already handles this:
+Run these from `telegram-worker/` unless a command uses an explicit `--config` path.
 
 ```sh
-./scripts/build-xcode.sh
+npm install
+npm run deploy
+npm run set-webhook
 ```
 
-It picks the first available iOS simulator from `simctl`. To override:
+If this machine does not have system Node installed, the local ignored Node toolchain can be used:
 
 ```sh
-DESTINATION='platform=iOS Simulator,OS=18.6,name=iPhone 16' ./scripts/build-xcode.sh
+PATH=/Users/Shared/sv-dankpad/go-schedule/.tools/node/bin:$PATH npm --prefix telegram-worker install
+PATH=/Users/Shared/sv-dankpad/go-schedule/.tools/node/bin:$PATH npx wrangler deploy --config telegram-worker/wrangler.toml
 ```
 
-## Test Command
-
-Use this command for the current simulator runtime:
+To inspect live Worker traffic:
 
 ```sh
-ARGS=()
-if [[ -n "${SV_SESSION_ID:-}" ]]; then
-    export SWIFTPM_DISABLE_SANDBOX=1
-    export SWIFT_BUILD_USE_SANDBOX=0
-    ARGS+=("-IDEPackageSupportDisableManifestSandbox=1")
-    ARGS+=("-IDEPackageSupportDisablePackageSandbox=1")
-    ARGS+=('OTHER_SWIFT_FLAGS=$(inherited) -disable-sandbox')
-fi
-
-DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
-xcodebuild test \
-    -project GoSchedule.xcodeproj \
-    -scheme GoSchedule \
-    -destination 'platform=iOS Simulator,OS=18.6,name=iPhone 16 Pro' \
-    CODE_SIGNING_ALLOWED=NO \
-    "${ARGS[@]}"
+PATH=/Users/Shared/sv-dankpad/go-schedule/.tools/node/bin:$PATH npx wrangler tail --config telegram-worker/wrangler.toml
 ```
 
-Current tests live in `GoScheduleTests/JourneyRequestTests.swift` and verify the API date/time request construction, including the 30-minute offset.
+## Cloudflare Configuration
 
-## IPA For AltStore
+`telegram-worker/wrangler.toml` is intentionally ignored because it is local deployment config.
 
-The most recent IPA was produced at `dist/GoSchedule.ipa`. `dist/` is ignored and must stay untracked.
+The checked-in template is `telegram-worker/wrangler.toml.example`:
 
-To rebuild an unsigned device IPA for AltStore:
+```toml
+name = "your-worker-name"
+main = "src/index.js"
+compatibility_date = "2026-05-23"
 
-```sh
-ARGS=()
-if [[ -n "${SV_SESSION_ID:-}" ]]; then
-    export SWIFTPM_DISABLE_SANDBOX=1
-    export SWIFT_BUILD_USE_SANDBOX=0
-    ARGS+=("-IDEPackageSupportDisableManifestSandbox=1")
-    ARGS+=("-IDEPackageSupportDisablePackageSandbox=1")
-    ARGS+=('OTHER_SWIFT_FLAGS=$(inherited) -disable-sandbox')
-fi
-
-DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
-xcodebuild \
-    -project GoSchedule.xcodeproj \
-    -scheme GoSchedule \
-    -configuration Release \
-    -destination 'generic/platform=iOS' \
-    CODE_SIGNING_ALLOWED=NO \
-    build \
-    "${ARGS[@]}"
-
-rm -rf dist/ipa-work
-mkdir -p dist/ipa-work/Payload
-cp -R .DerivedData/GoSchedule/Build/Products/Release-iphoneos/GoSchedule.app dist/ipa-work/Payload/
-(
-    cd dist/ipa-work
-    /usr/bin/zip -qry ../GoSchedule.ipa Payload
-)
+[observability]
+enabled = true
 ```
 
-Validation checks used:
-
-```sh
-file dist/ipa-work/Payload/GoSchedule.app/GoSchedule
-lipo -info dist/ipa-work/Payload/GoSchedule.app/GoSchedule
-unzip -l dist/GoSchedule.ipa | sed -n '1,40p'
-```
-
-Expected binary is `Mach-O 64-bit executable arm64`. Expected archive layout starts with `Payload/GoSchedule.app/`.
-
-The IPA contains the GO API key in its built `Info.plist` because the app needs it at runtime. Do not share the IPA publicly. Never commit `dist/`, `.DerivedData/`, or `Config/Secrets.xcconfig`.
-
-Note: while producing the IPA, Xcode modified local signing-related project files (`DEVELOPMENT_TEAM` and the shared scheme). Those local changes were intentionally left uncommitted. Review `git status` before committing anything.
-
-## App Behavior
-
-The app is intentionally small:
-
-- Home screen has only two route buttons: Union to Maple, Maple to Union.
-- A compact date/time picker sits at the bottom of the home screen.
-- The picker defaults to the current date/time.
-- Opening a route screen calls the GO API for the selected date/time minus 30 minutes.
-- Pull-to-refresh on the route screen repeats the API call for the same selected date/time.
-- The route screen uses the standard navigation back button.
-
-## Schedule Data
-
-The app intentionally avoids rendering the GO Transit website. It calls the GO API Journey endpoint when a route screen opens:
-
-```text
-https://api.openmetrolinx.com/OpenDataAPI/api/V1/Schedule/Journey/{Date}/{FromStopCode}/{ToStopCode}/{StartTime}/{MaxJourney}?key={GO_TRANSIT_API_KEY}
-```
-
-Current stop codes are `UN` for Union Station GO and `MP` for Maple GO. `Date` is `yyyyMMdd`; `StartTime` is `HHmm` from the selected date/time minus 30 minutes.
-
-The relevant code is in `GoSchedule/ScheduleStore.swift`:
-
-- `ScheduleDirection` maps route buttons to stop codes.
-- `JourneyRequest` builds the API path and query.
-- `ScheduleStore.loadTrips(for:relativeTo:)` fetches and decodes the API response.
-
-Do not reintroduce bundled GTFS/static schedule files unless the user asks for offline support. The prior `Schedules.json` and GTFS generator were removed in favor of live API calls.
+The current local Worker name is `<worker-name>`.
 
 ## Secrets
 
-Never commit a real GO Transit API key. The checked-in file is `Config/Secrets.xcconfig.example`; the local file `Config/Secrets.xcconfig` is ignored by Git.
+Never commit real secrets. The local secret file is:
 
-Create the local file with:
+```text
+telegram-worker/secrets.yaml
+```
+
+The checked-in template is:
+
+```text
+telegram-worker/secrets-example.yaml
+```
+
+Expected secret names:
+
+- `GO_TRANSIT_API_KEY`
+- `TELEGRAM_BOT_TOKEN`
+- `TELEGRAM_WEBHOOK_SECRET`
+- `ALLOWED_CHAT_IDS` optional allowlist
+
+Cloudflare secrets must be set with Wrangler:
 
 ```sh
-cp Config/Secrets.xcconfig.example Config/Secrets.xcconfig
+npx wrangler secret put GO_TRANSIT_API_KEY
+npx wrangler secret put TELEGRAM_BOT_TOKEN
+npx wrangler secret put TELEGRAM_WEBHOOK_SECRET
 ```
 
-Then set:
+`TELEGRAM_WEBHOOK_SECRET` should be a long random value and must match the secret used when calling Telegram `setWebhook`.
 
-```xcconfig
-GO_TRANSIT_API_KEY = actual-key-here
+`ALLOWED_CHAT_IDS` is optional. If set, it is a comma-separated allowlist, for example:
+
+```text
+123456789,987654321
 ```
 
-The app reads the key through generated build settings in `GoSchedule/Info.plist` using `AppConfiguration.goTransitAPIKey`.
+The Worker allows any Telegram chat when `ALLOWED_CHAT_IDS` is unset. Abuse is capped by the global daily KV rate limit.
 
-When auditing, do not print the key. Safe checks used previously:
+## Rate Limiting
+
+The Worker uses a `RATE_LIMIT_KV` namespace to cap authenticated Telegram webhook updates.
+
+Configured template limit:
+
+```text
+500 requests per Toronto calendar day
+```
+
+Create the namespace:
 
 ```sh
-KEY="$(awk -F= '/^[[:space:]]*GO_TRANSIT_API_KEY[[:space:]]*=/ {value=$0; sub(/^[^=]*=/, "", value); gsub(/^[[:space:]]+|[[:space:]]+$/, "", value); print value; exit}' Config/Secrets.xcconfig)"
-git ls-files -z | xargs -0 grep -F -q -- "$KEY" && echo FOUND || echo not-found
-git rev-list --all | while read -r commit; do git grep -F -q -- "$KEY" "$commit" && { echo FOUND; exit 0; }; done
+npx wrangler kv namespace create RATE_LIMIT_KV --config telegram-worker/wrangler.toml
 ```
 
-`Config/Secrets.xcconfig` must remain ignored and untracked.
+Then add the returned namespace ID to local `telegram-worker/wrangler.toml`.
+
+The checked-in example includes:
+
+```toml
+[vars]
+DAILY_REQUEST_LIMIT = "500"
+
+[[kv_namespaces]]
+binding = "RATE_LIMIT_KV"
+id = "replace-with-kv-namespace-id"
+```
+
+## Webhook Setup
+
+After deploying, register the Telegram webhook:
+
+```sh
+read -rsp "Telegram bot token: " TELEGRAM_BOT_TOKEN
+echo
+read -rsp "Telegram webhook secret: " TELEGRAM_WEBHOOK_SECRET
+echo
+read -rp "Worker URL: " WORKER_URL
+export TELEGRAM_BOT_TOKEN TELEGRAM_WEBHOOK_SECRET WORKER_URL
+npm run set-webhook
+```
+
+Verify the public health check with the Worker URL from local secrets:
+
+```sh
+curl -fsS $WORKER_URL
+```
+
+Verify Telegram webhook state:
+
+```sh
+curl -fsS "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getWebhookInfo"
+```
+
+Do not paste command output if it includes a real bot token or other secret.
+
+## Commit Safety
+
+Before committing, run:
+
+```sh
+git status --short --ignored
+```
+
+Keep these untracked or ignored:
+
+- `.tools/`
+- `.wrangler/`
+- `telegram-worker/.wrangler/`
+- `telegram-worker/node_modules/`
+- `telegram-worker/secrets.yaml`
+- `telegram-worker/wrangler.toml`
+
+Safe files to commit from the Worker setup normally include:
+
+- `.gitignore`
+- `AGENTS.md`
+- `telegram-worker/README.md`
+- `telegram-worker/secrets-example.yaml`
+- `telegram-worker/wrangler.toml.example`
+- `telegram-worker/src/index.js`
+- `telegram-worker/scripts/set-webhook.mjs`
+- `telegram-worker/package.json`
+- `telegram-worker/package-lock.json`
+
+Review unrelated deletions or modifications before staging.
+
+## Security Notes
+
+The Worker requires `GO_TRANSIT_API_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_WEBHOOK_SECRET`, and the `RATE_LIMIT_KV` binding before processing Telegram updates.
+
+For private friends/family use without collecting chat IDs, keep the global daily cap low. `500` requests per day is reasonable for a small group.
+
+The Worker should not log Telegram message text, chat IDs, API keys, or full upstream request URLs containing the GO API key.
+
+Cloudflare Workers Free limits help cap accidental traffic, but abuse can still burn daily quota or upstream API quota. Treat the bot username and invite links as semi-public once shared.
