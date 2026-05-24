@@ -1,3 +1,9 @@
+import { readFile } from "node:fs/promises";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+await loadDevVars();
+
 const token = process.env.TELEGRAM_BOT_TOKEN;
 const workerUrl = process.env.WORKER_URL;
 const secret = process.env.TELEGRAM_WEBHOOK_SECRET;
@@ -24,3 +30,40 @@ if (!response.ok) {
 }
 
 console.log(body);
+
+async function loadDevVars() {
+  const scriptDir = dirname(fileURLToPath(import.meta.url));
+  const filePath = join(scriptDir, "..", ".dev.vars");
+  let content;
+
+  try {
+    content = await readFile(filePath, "utf8");
+  } catch (error) {
+    if (error.code === "ENOENT") return;
+    throw error;
+  }
+
+  for (const line of content.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+
+    const match = trimmed.match(/^([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/);
+    if (!match) continue;
+
+    const [, key, rawValue] = match;
+    if (process.env[key]) continue;
+
+    process.env[key] = unquote(rawValue.trim());
+  }
+}
+
+function unquote(value) {
+  if (
+    (value.startsWith('"') && value.endsWith('"')) ||
+    (value.startsWith("'") && value.endsWith("'"))
+  ) {
+    return value.slice(1, -1);
+  }
+
+  return value;
+}

@@ -1,0 +1,7 @@
+GO_TRANSIT_API_KEY="key goes here"
+TELEGRAM_BOT_TOKEN="bot token goes here"
+TELEGRAM_WEBHOOK_SECRET="long random webhook secret goes here"
+WORKER_URL="deployed Worker URL here"
+
+# Optional comma-separated allowlist:
+# ALLOWED_CHAT_IDS="123456789,987654321"

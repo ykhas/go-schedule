@@ -38,7 +38,22 @@ The GO API request uses the selected time minus 30 minutes.
    npx wrangler login
    ```
 
-4. Store secrets:
+4. Create one ignored local env file for local commands and webhook registration:
+
+   ```sh
+   cp .dev.vars.example .dev.vars
+   ```
+
+   Fill in:
+
+   ```sh
+   GO_TRANSIT_API_KEY="key goes here"
+   TELEGRAM_BOT_TOKEN="bot token goes here"
+   TELEGRAM_WEBHOOK_SECRET="long random webhook secret goes here"
+   WORKER_URL="deployed Worker URL here"
+   ```
+
+5. Store the Worker runtime secrets in Cloudflare:
 
    ```sh
    npx wrangler secret put TELEGRAM_BOT_TOKEN
@@ -48,7 +63,7 @@ The GO API request uses the selected time minus 30 minutes.
 
    Use any long random value for `TELEGRAM_WEBHOOK_SECRET`.
 
-5. Create the KV namespace used for the daily request limit:
+6. Create the KV namespace used for the daily request limit:
 
    ```sh
    npx wrangler kv namespace create RATE_LIMIT_KV
@@ -56,7 +71,7 @@ The GO API request uses the selected time minus 30 minutes.
 
    Add the returned namespace ID to `wrangler.toml` under `[[kv_namespaces]]`.
 
-6. Optional: restrict who can use the bot if you later decide to collect chat IDs:
+7. Optional: restrict who can use the bot if you later decide to collect chat IDs:
 
    ```sh
    npx wrangler secret put ALLOWED_CHAT_IDS
@@ -64,13 +79,19 @@ The GO API request uses the selected time minus 30 minutes.
 
    Use a comma-separated list, for example `123456789,987654321`.
 
-7. Deploy:
+8. Deploy:
 
    ```sh
    npm run deploy
    ```
 
-8. Set the Telegram webhook, replacing the URL with the deployed Worker URL. Avoid putting real secrets directly in your shell history:
+9. Set the Telegram webhook. The script reads values from the environment or from ignored `.dev.vars`:
+
+   ```sh
+   npm run set-webhook
+   ```
+
+   Environment variables override `.dev.vars` if you need a one-off value:
 
    ```sh
    read -rsp "Telegram bot token: " TELEGRAM_BOT_TOKEN

@@ -56,16 +56,16 @@ The current local Worker name is `<worker-name>`.
 
 ## Secrets
 
-Never commit real secrets. The local secret file is:
+Never commit real secrets. The local env file is:
 
 ```text
-telegram-worker/secrets.yaml
+telegram-worker/.dev.vars
 ```
 
 The checked-in template is:
 
 ```text
-telegram-worker/secrets-example.yaml
+telegram-worker/.dev.vars.example
 ```
 
 Expected secret names:
@@ -164,6 +164,7 @@ Keep these untracked or ignored:
 - `.wrangler/`
 - `telegram-worker/.wrangler/`
 - `telegram-worker/node_modules/`
+- `telegram-worker/.dev.vars`
 - `telegram-worker/secrets.yaml`
 - `telegram-worker/wrangler.toml`
 
@@ -172,7 +173,7 @@ Safe files to commit from the Worker setup normally include:
 - `.gitignore`
 - `AGENTS.md`
 - `telegram-worker/README.md`
-- `telegram-worker/secrets-example.yaml`
+- `telegram-worker/.dev.vars.example`
 - `telegram-worker/wrangler.toml.example`
 - `telegram-worker/src/index.js`
 - `telegram-worker/scripts/set-webhook.mjs`
